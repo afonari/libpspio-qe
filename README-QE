@@ -1,9 +1,15 @@
 # Changes from the original distribution
 
+## Init phase
+
+  1. `bzr export -r 330 ./tmp lp:libpspio`
+  1. `cp -r ./tmp ./`
+  1. `rm -rf ./tmp`
+
 ## Removed `autogen` dependency
 
   1. `./autogen.sh`
-  1. `./configure --enable-fortran` - this will create `config.h`
+  1. `./configure --enable-fortran --enable-gsl=no` - this will create `config.h`
   1. Clean `autogen` files (to run in the `root` folder):  
 ```
 rm aclocal.m4
@@ -44,7 +50,7 @@ rm -rf src/fortran
 ## Root `Makefile` (should indent using Tabs!)
 
 ```
-# Copyright (C) 2011-2012 Quantum ESPRESSO Foundation
+# Copyright (C) 2011-2014 Quantum ESPRESSO Foundation / Alexandr Fonari
 #
 # This file is distributed under the terms of the
 # GNU General Public License. See the file `License'
@@ -78,13 +84,20 @@ veryclean: clean
 ## `src/` folder `Makefile`
 
   1. Change forlder to `src`: `cd src/`
+  1. `touch Makefile`
   1. Get the list of files:  
-ls -1 src/*.c src/fortran/*.F90 | awk 'gsub(/\.c$|\.F90$/, ".o \\")'
+`ls -1 *.c *.f90 | awk 'gsub(/\.c$|\.f90$/, ".o \\")'`
 
 The resulting `src/Makefile`:
 
 ```
-# Makefile for Modules
+# Copyright (C) 2011-2014 Quantum ESPRESSO Foundation / Alexandr Fonari
+#
+# This file is distributed under the terms of the
+# GNU General Public License. See the file `License'
+# in the root directory of the present distribution,
+# or http://www.gnu.org/copyleft/gpl.txt .
+#
 
 include ../../make.sys
 
@@ -96,6 +109,7 @@ MANUAL_DFLAGS += -DHAVE_CONFIG_H
 LIBPSPIOMODS = \
   abinit_util.o \
   abinit_xc.o \
+  interpolation.o \
   pspio_abinit.o \
   pspio_error.o \
   pspio_f90_types.o \
@@ -136,7 +150,5 @@ libpspio.a: $(LIBPSPIOMODS)
 
 clean :
 	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L
-
-# include make.depend
 
 ```
