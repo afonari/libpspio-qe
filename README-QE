@@ -1,0 +1,142 @@
+# Changes from the original distribution
+
+## Removed `autogen` dependency
+
+  1. `./autogen.sh`
+  1. `./configure --enable-fortran` - this will create `config.h`
+  1. Clean `autogen` files (to run in the `root` folder):  
+```
+rm aclocal.m4
+rm autogen.sh
+rm config.h.in
+rm config.log
+rm config.status
+rm configure
+rm configure.ac
+rm INSTALL
+rm libtool
+rm Makefile
+rm Makefile.am
+rm Makefile.in
+rm quickcheck.sh
+rm stamp-h1
+rm wipeout.sh
+# dirs
+rm -rf autom4te.cache
+rm -rf config
+# src dir
+rm src/Makefile.am
+rm src/Makefile.in
+rm src/Makefile
+# src/fortran dir
+rm src/fortran/Makefile
+rm src/fortran/Makefile.am
+rm src/fortran/Makefile.in
+rm src/fortran/test_fortran_input.tmp
+#
+mv config.h src/
+mv src/fortran/pspio_f90_lib.F90 src/pspio_f90_lib.f90
+mv src/fortran/pspio_f90_types.F90 src/pspio_f90_types.f90
+mv src/fortran/pspio_fortran_c.c src/pspio_fortran_c.c
+rm -rf src/fortran
+```
+
+## Root `Makefile` (should indent using Tabs!)
+
+```
+# Copyright (C) 2011-2012 Quantum ESPRESSO Foundation
+#
+# This file is distributed under the terms of the
+# GNU General Public License. See the file `License'
+# in the root directory of the present distribution,
+# or http://www.gnu.org/copyleft/gpl.txt .
+#
+
+default : build_libpspio
+
+all: build_libpspio
+
+build_libpspio:
+	if test -d src ; then \
+	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) ; \
+	else $(MAKE) $(MFLAGS) ; fi ) ; fi
+
+clean:
+	if test -d src ; then \
+	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
+	else $(MAKE) $(MFLAGS) clean ; fi ) ; fi
+	if test -d devel ; then \
+	( cd devel ; if test "$(MAKE)" = "" ; then make $(MFLAGS) clean ; \
+	else $(MAKE) $(MFLAGS) clean ; fi ) ; fi
+	rm -f libpspio.a
+
+veryclean: clean
+	rm -f libpspio.a
+
+```
+
+## `src/` folder `Makefile`
+
+  1. Change forlder to `src`: `cd src/`
+  1. Get the list of files:  
+ls -1 src/*.c src/fortran/*.F90 | awk 'gsub(/\.c$|\.F90$/, ".o \\")'
+
+The resulting `src/Makefile`:
+
+```
+# Makefile for Modules
+
+include ../../make.sys
+
+# location of needed modules
+MODFLAGS = $(MOD_FLAG).
+MANUAL_DFLAGS += -DHAVE_CONFIG_H
+# LIBS += -lgsl -lgslcblas
+
+LIBPSPIOMODS = \
+  abinit_util.o \
+  abinit_xc.o \
+  pspio_abinit.o \
+  pspio_error.o \
+  pspio_f90_types.o \
+  pspio_f90_lib.o \
+  pspio_fhi.o \
+  pspio_fortran_c.o \
+  pspio_info.o \
+  pspio_mesh.o \
+  pspio_meshfunc.o \
+  pspio_potential.o \
+  pspio_projector.o \
+  pspio_pspdata.o \
+  pspio_qn.o \
+  pspio_state.o \
+  pspio_upf.o \
+  pspio_xc.o \
+  test_error.o \
+  test_io.o \
+  test_mesh.o \
+  test_meshfunc.o \
+  test_potential.o \
+  test_projector.o \
+  test_qn.o \
+  test_state.o \
+  test_xc.o \
+  upf_read.o \
+  upf_tag.o \
+  upf_write.o \
+  upf_xc.o \
+  util.o
+
+all : libpspio.a
+
+libpspio.a: $(LIBPSPIOMODS)
+	$(AR) $(ARFLAGS) $@ $?       
+	$(RANLIB) $@
+	mv $@ ../    
+
+clean :
+	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L
+
+# include make.depend
+
+```
